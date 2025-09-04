@@ -1,5 +1,5 @@
 from Settings.apis import *
-from ..Settings.router import APIRouter
+from Settings.router import APIRouter
 from Utils.utils import parse_api_response, extract_api_params_from_user_query
 
 def chat(query, agent=None):
