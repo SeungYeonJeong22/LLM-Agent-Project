@@ -1,0 +1,8 @@
+dotenv==0.9.9
+fastapi==0.116.1
+langchain==0.3.27
+langchain-openai==0.3.32
+openai==1.105.0
+pydantic==2.11.7
+SQLAlchemy==2.0.43
+tqdm==4.67.1
