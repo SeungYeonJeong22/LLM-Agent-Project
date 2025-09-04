@@ -15,18 +15,16 @@ from langchain.chains.openai_functions import create_structured_output_chain
 from warnings import filterwarnings
 filterwarnings("ignore")
 
+load_dotenv()
+
+OPEN_API_ACCESS_KEY =  os.getenv("OPEN_API_ACCESS_KEY")
+if not OPEN_API_ACCESS_KEY:
+    raise EnvironmentError("OPEN_API_ACCESS_KEY is not exist in .env.")        
+
+os.environ["OPENAI_API_KEY"] = OPEN_API_ACCESS_KEY
+
 class Agent:
-    def __init__(self):
-        # 환경 설정
-        load_dotenv()
-        OPEN_API_ACCESS_KEY =  os.getenv("OPEN_API_ACCESS_KEY")
-        SARAMIN_ACCESS_KEY = os.getenv("SARAMIN_API_ACCESS_KEY")
-        
-        if not OPEN_API_ACCESS_KEY:
-            raise EnvironmentError("OPEN_API_ACCESS_KEY is not exist in .env.")        
-        
-        os.environ["OPENAI_API_KEY"] = OPEN_API_ACCESS_KEY
-        
+    def __init__(self):        
         # 모델 설정
         self.llm = ChatOpenAI
         self.model = "gpt-5-nano" # 좀 느림
@@ -41,9 +39,9 @@ class Agent:
         
         self.function_chains = {}
         
-        self._set_chain()
+        self.__set_chain()
         
-    def _set_chain(self):
+    def __set_chain(self):
         llm = self.llm(
                 model=self.model, 
                 temperature=self.temperature # 얼마나 다양하게 답변을 제공할 것인가
