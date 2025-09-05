@@ -179,3 +179,7 @@ pyrightconfig.json
 *.png
 *.jpg
 *.ipynb
+
+.env
+config.py
+Schema/saramin.json
