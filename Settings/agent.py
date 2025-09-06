@@ -33,9 +33,9 @@ class Agent:
         
         # Chain 설정
         self.chain = None
-        self.system_messages: List[ChatMessage] = []
-        self.ai_messages = None
-        self.human_messages = None
+        self.system_messages: []
+        self.ai_messages: List[ChatMessage] = []
+        self.human_messages: List[ChatMessage] = []
         
         self.function_chains = {}
         
@@ -52,17 +52,32 @@ class Agent:
             # MessagesPlaceholder("policy"),   # List[ChatMessage]
             # MessagesPlaceholder("history"),  # List[Human/AI/...]
             ("human", "{input}"),
-            ("ai", "다음은 외부 API에서 가져온 검색 결과야:\n\n{api_result}\n\n이걸 참고해서 유저에게 요약된 결과를 알려줘.")
+            # MessagesPlaceholder("response_api"),
+            ("ai", "다음은 외부 API에서 가져온 검색 결과야:\n\n{response_api}\n\n이걸 참고해서 유저에게 요약된 결과를 알려줘."),
+            ("system", "{system}"),
         ])
 
         self.chain = prompt | llm #LLM 호출 & 체인 연결 (|로 연결)
 
-        self.system_messages = [
-            ChatMessage(role="system", content="너는 친절하고 간결한 한국어 에이전트 모델이야. 답변은 반드시 한국어로 해야 해."),
+        system_messages1 = [
+            ChatMessage(role="system", content="너는 친절한 한국어 에이전트 모델이야. 답변은 반드시 한국어로 해야 해."),
             ChatMessage(role="system", content="불확실하면 추측하지 말고 필요한 정보를 물어봐."),
             ChatMessage(role="system", content="숫자/단계가 있으면 짧은 목록으로 정리해."),
             ChatMessage(role="system", content="코드/명령어는 가능한 한 하나의 블록으로 묶어줘."),
             ChatMessage(role="system", content="개인정보/민감정보는 요청해도 제공하지 마.")
+        ]
+        
+        system_messages2 = [
+            ChatMessage(role="system", content="스스로 약 3번 이상 검토해보고 스스로에 대한 유저의 질문과 답하고자 하는 대답간의 유사성 및 재현성을 판단해줘."),
+        ]
+        
+        self.system_messages = [
+            system_messages1,
+            system_messages2
+        ]
+        
+        self.ai_messages = [
+            ChatMessage(role='ai', content="너는 유저의 쿼리와 API를 호출한 대답의 결과에 대해서 유사성이 높은 것에 대해서 얘기해줘야 해.")
         ]
         
         
@@ -74,7 +89,7 @@ class Agent:
             output_schema=schema['parameters'],
             llm=llm,
             prompt=ChatPromptTemplate.from_messages([
-                ("system", f"유저의 자연어 질문으로부터 {api_name} API에 사용할 파라미터를 추출해줘."),
+                ("system", f"유저의 질문으로부터 {api_name} API에 사용할 파라미터를 추출해줘."),
                 ("human", "{input}")
             ]),
             verbose=False
@@ -91,3 +106,6 @@ class Agent:
 
     def get_system_message(self):
         return self.system_messages
+
+    def get_ai_message(self):
+        return self.ai_messages    

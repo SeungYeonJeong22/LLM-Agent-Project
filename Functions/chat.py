@@ -16,9 +16,12 @@ def chat(query, agent=None):
     parsed_api_response = parse_api_response(api_response)
 
     response = agent.chain.invoke({
-        "system": agent.get_system_message(),
+        "system": agent.get_system_message()[0],
         "input": query,
-        "api_result": parsed_api_response
+        "response_api": parsed_api_response,
+        "ai": agent.get_ai_message(),
+        "system": agent.get_system_message()[-1]
     })
+
 
     return response.content

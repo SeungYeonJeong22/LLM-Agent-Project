@@ -8,7 +8,6 @@ SARAMIN_ACCESS_KEY = os.getenv("SARAMIN_API_ACCESS_KEY")
 
 class SaraminAPI:
     def __init__(self):
-        
         self.url = "https://oapi.saramin.co.kr/job-search"
         self.__headers = {
             "Accept":"application/json"
