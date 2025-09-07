@@ -183,3 +183,6 @@ pyrightconfig.json
 .env
 config.py
 Schema/saramin.json
+
+*.ini
+alembic/
