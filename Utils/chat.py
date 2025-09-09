@@ -84,4 +84,3 @@ def update_session_title_if_empty(db: Session, chat_session_id: int, title: str)
     db.flush()
     db.refresh(sess)
     db.commit()
-        

@@ -2,6 +2,8 @@ from Settings.apis import *
 from Settings.router import APIRouter
 from Utils.utils import *
 from openai import OpenAI
+from Utils.utils import Loader, StreamingCallback
+
 
 def chat(query, agent=None, chat_log=None):
     if agent is None or agent.chain is None:
@@ -16,14 +18,30 @@ def chat(query, agent=None, chat_log=None):
     api_response = api.search(user_params)
     api_response = parse_api_response(api_response)
     # api_response = normalize_response(api_response, schema_path)
+    
+    loader = Loader(desc="답변 생성 중...")
+    loader.start()
+    time.sleep(1)
 
-    response = agent.chain.invoke({
-        "system_head": agent.system_messages_head,
-        "history": chat_log,
-        "input": query,
-        "api_response": api_response,
-        "system_tail": agent.system_messages_tail
-    })
+    try:
+        # 스트리밍은 invoke 시점부터 시작.
+        # 첫 토큰 이벤트에서 콜백이 loader.stop()을 호출해 스피너를 종료함.
+        response = agent.chain.invoke(
+            {
+                "system_head": agent.system_messages_head,
+                "history": chat_log or [],
+                "input": query,
+                "api_response": api_response,
+                "system_tail": agent.system_messages_tail,
+            },
+            config={"callbacks": [StreamingCallback(loader)]},
+        )
+    finally:
+        # 예외 등으로 첫 토큰 전에 실패 시 스피너가 남지 않도록 보장
+        try:
+            loader.stop()
+        except Exception:
+            pass
 
     return response.content
 

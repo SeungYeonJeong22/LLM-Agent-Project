@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 import json
 import time
+import sys
 
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import (
@@ -12,7 +13,6 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.tools import tool
 from langchain.agents import Tool, initialize_agent, AgentType
 from langchain.chains.openai_functions import create_structured_output_chain
-from langchain.callbacks.base import BaseCallbackHandler
 
 
 from Utils.chat import select_chat_log
@@ -28,12 +28,6 @@ if not OPEN_API_ACCESS_KEY:
     raise EnvironmentError("OPEN_API_ACCESS_KEY is not exist in .env.")        
 
 os.environ["OPENAI_API_KEY"] = OPEN_API_ACCESS_KEY
-
-
-class PrintCallback(BaseCallbackHandler):
-    def on_llm_new_token(self, token, **kwargs):
-        print(token, end="", flush=True)
-        
 
 class Agent:
     def __init__(self):        
@@ -58,7 +52,6 @@ class Agent:
                 model=self.model, 
                 temperature=self.temperature, # 얼마나 다양하게 답변을 제공할 것인가
                 streaming=True,
-                callbacks=[PrintCallback()]
             )
 
         prompt = ChatPromptTemplate.from_messages([
@@ -109,11 +102,12 @@ class Agent:
         
     def get_params_mapping_api(self, api_name, schema_path):
         schema = self.get_schema(schema_path)
+        llm = self.llm(model="gpt-4o-mini", temperature=0.0)
+        
         loader = Loader(desc="API 파라미터 추출 중...")
         loader.start()
         time.sleep(1)
         
-        llm = self.llm(model="gpt-4o-mini", temperature=0.0)
         try:
             function_chain = create_structured_output_chain(
                 output_schema=schema['parameters'],

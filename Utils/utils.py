@@ -1,6 +1,7 @@
 import json
 from config import schema_config
 import sys, threading, time, itertools
+from langchain.callbacks.base import BaseCallbackHandler
 
 CONFIG = schema_config
 schema_map = {
@@ -92,5 +93,26 @@ class Loader:
         self._running = False
         if self._thread is not None:
             self._thread.join()
-        sys.stdout.write(f"\r{self.end}\n")  # 완료 후 줄 바꿈
+        sys.stdout.write(f"\n\r{self.end}\n\n")  # 완료 후 줄 바꿈
         sys.stdout.flush()
+        
+        
+class StreamingCallback(BaseCallbackHandler):
+    def __init__(self, loader):
+        self.loader = loader
+        self.started = False
+
+    def on_llm_new_token(self, token, **kwargs):
+        if not self.started:
+            try:
+                self.loader.stop()
+            except Exception:
+                pass
+            sys.stderr.write("\r\033[K")
+            sys.stderr.flush()
+            self.started = True
+        print(token, end="", flush=True)
+
+    def on_llm_end(self, *args, **kwargs):
+        print()
+                
