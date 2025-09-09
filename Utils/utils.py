@@ -1,5 +1,6 @@
 import json
 from config import schema_config
+import sys, threading, time, itertools
 
 CONFIG = schema_config
 schema_map = {
@@ -63,3 +64,33 @@ def parse_api_response(api_response, max_items: int = 5) -> str:
             return str(obj)
 
     return flatten_and_simplify(data)
+
+
+
+class Loader:
+    def __init__(self, desc="Loading...", end="Done!", interval=0.1):
+        self.desc = desc
+        self.end = end
+        self.interval = interval
+        self._running = False
+        self._thread = None
+
+    def start(self):
+        self._running = True
+        self._thread = threading.Thread(target=self._animate, daemon=True)
+        self._thread.start()
+
+    def _animate(self):
+        for c in itertools.cycle(["|", "/", "-", "\\"]):
+            if not self._running:
+                break
+            sys.stdout.write(f"\r{self.desc} {c}")  # \r로 현재 줄 덮어쓰기
+            sys.stdout.flush()
+            time.sleep(self.interval)
+
+    def stop(self):
+        self._running = False
+        if self._thread is not None:
+            self._thread.join()
+        sys.stdout.write(f"\r{self.end}\n")  # 완료 후 줄 바꿈
+        sys.stdout.flush()

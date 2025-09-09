@@ -65,8 +65,8 @@ def select_chat_log(db: Session, user_id: int, chat_session_id: int) -> List[Cha
 
 # chat log append
 def update_chat_log(db: Session, user_id: int, chat_session_id: int, query:str, response: str) -> ChatLog:
-    human = ChatLog(user_id=user_id, session_id=chat_session_id, role='human', chat_log=query)
-    ai = ChatLog(user_id=user_id, session_id=chat_session_id, role='ai', chat_log=response)
+    human = ChatLog(user_id=user_id, session_id=chat_session_id, role='user', chat_log=query)
+    ai = ChatLog(user_id=user_id, session_id=chat_session_id, role='assistant', chat_log=response)
     
     for sess in [human, ai]:
         db.add(sess)
