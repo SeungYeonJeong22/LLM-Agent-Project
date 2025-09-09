@@ -186,3 +186,4 @@ Schema/saramin.json
 
 *.ini
 alembic/
+*.DS_Store
