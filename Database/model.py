@@ -42,6 +42,7 @@ class ChatLog(Base):
         ForeignKey("chat_session.id", ondelete="CASCADE"),
         index=True, nullable=False
     )
+    role: Mapped[str] = mapped_column(String(64), nullable=True)
     chat_log: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

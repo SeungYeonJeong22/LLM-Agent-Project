@@ -1,6 +1,7 @@
 from typing import Dict, List
 import os
 from dotenv import load_dotenv
+import json
 
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import (
@@ -9,9 +10,10 @@ from langchain_core.messages import (
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.tools import tool
 from langchain.agents import Tool, initialize_agent, AgentType
-import json
-
 from langchain.chains.openai_functions import create_structured_output_chain
+
+from Utils.chat import select_chat_log
+
 from warnings import filterwarnings
 filterwarnings("ignore")
 
@@ -49,7 +51,7 @@ class Agent:
 
         prompt = ChatPromptTemplate.from_messages([
             ("system", "{system_head}"),
-            # MessagesPlaceholder("history"),  # List[Human/AI/...]
+            MessagesPlaceholder("history"),  # List[Human/AI/...]
             ("human", "{input}"),
             ("ai", "다음은 외부 API에서 가져온 검색 결과야:\n\n{api_response}\n\n이걸 참고해서 유저에게 요약된 결과를 알려줘."),
             ("system", "{system_tail}"),
@@ -69,10 +71,18 @@ class Agent:
             ChatMessage(role="system", content="스스로 3번 이상 검토해보고 스스로에 대한 유저의 질문과 답하고자 하는 대답간의 유사성 및 재현성을 판단해줘."),
         ]
         
+        
+    def load_chat_log(self, db, user_id, session_id):
+        logs = select_chat_log(db, user_id, session_id)
+        histories = []
+        
+        for log in logs:
+            histories += [
+                ChatMessage(role=f"{log.role}", content=f"{log.chat_log}")
+            ]
 
-        # self.ai_messages = [
-        #     ChatMessage(role='ai', content="너는 유저의 쿼리와 API를 호출한 대답의 결과에 대해서 유사성이 높은 것에 대해서 얘기해줘야 해.")
-        # ]
+        return histories
+        
         
         
     def get_params_mapping_api(self, api_name, schema_path):

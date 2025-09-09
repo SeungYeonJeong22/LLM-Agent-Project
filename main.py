@@ -18,58 +18,53 @@ if __name__ == "__main__":
             elif sign_type == 2: 
                 sign_up(db)
                 continue
+            elif sign_type == 3:
+                delete_users(db)
+                continue
             else:
-                raise "Select 1, 2"
+                raise ValueError("Select in [1, 2, 3]")
 
             print(f"\n----Login Success {user.nickname}!----\n")
             agent = Agent()
             
-            chat_type = select_chat_type()
-            
-            if chat_type == 1: 
-                create_session(db=db, user_id=user.id, session_name="New Chat")
-                db.commit()
-                chat_type = 2
-            
-            session_histories = list_sessions_history(db, user_id=user.id)
-            
-            for session_history in session_histories:
-                print(f"Session ID: {session_history.id}\t \
-                    Session Name: {session_history.session_name} \
-                    (Created At: {session_history.created_at})")
-            
-            # for id, session_name in zip(session_history.id, session_history.session_name):
-            #     print(id, session_name)
-            session_id = int(input("Select Number in above lists: "))
-            
-            chat_logs = load_chat_session(db, user.id, session_id)
-            print(f"Yours Chatlogs: {chat_logs}")
-            
-            print("\nStart Chat!\n")
-            
-            # new_session_title = False
             while True:
-                user_input = input("Query : ")
+                sessions = {}
+                chat_type = select_chat_type()
                 
-                response = chat(user_input, agent)
-                print(response)
+                if chat_type == 1:  #create
+                    create_session(db=db, user_id=user.id, session_name="New Chat")
+                elif chat_type == 3: #delete
+                    delete_session(db)
+                    continue
                 
-                # append_chat_log(db, user.id, session_id, response)
-                # if not session_title_flag: # 나중에 이름 요약 모델 살짝 돌리기
-                #     update_session_title_if_empty(db, session_id, )
-                # session_title_flag = True
+                # chat type:2, 기존 채팅창 불러와서 사용(메모라이제이션 기능이 달라짐)
+                session_histories = select_sessions_history(db, user_id=user.id)
+                chat_log = ""
                 
+                if not session_histories:
+                    print("There is not exist chat histories.\n Create New Chat!")
+                    create_session(db=db, user_id=user.id, session_name="New Chat")
+                    session_history = select_sessions_history(db, user_id=user.id)
+                    sessions[session_history[0].id] = session_history[0].session_name
+                else:
+                    for session_history in session_histories:
+                        sessions[session_history.id] = session_history.session_name
+                        print(f"Session ID: {session_history.id}\t \
+                            Session Name: {session_history.session_name} \
+                            (Created At: {session_history.created_at})")
+                    
+                    session_id = int(input("Select Number in above lists: "))
+                    chat_log = agent.load_chat_log(db, user.id, session_id)
                 
-    
-    
-    
-    
-    
-    # # chat_type = select_chat_type # [1.new 2.histories]
-    
-    
-    # agent = Agent()
-    # user_input = input("Query : ")
-    
-    # response = chat(user_input, agent)
-    # print(response)
+                print("\nStart Chat!\n")
+                while True:
+                    user_input = input("Query : ")
+                    
+                    response = chat(user_input, agent, chat_log)
+                    print(response)
+                    
+                    # 채팅 로그 기록하기
+                    update_chat_log(db, user.id, session_id, user_input, response)
+                    if sessions[session_id]=='New Chat': # 나중에 이름 요약 모델 살짝 돌리기
+                        title = make_title(response)
+                        update_session_title_if_empty(db, session_id, title)
