@@ -16,7 +16,27 @@ def extract_api_params_from_user_query(query, agent, api):
 
     result = function_chain.invoke({"input": query}) # 1차적으로 여기서 시간이 오래걸림
     user_params = result['function']
-    return user_params
+    return user_params, schema_path
+
+
+# 최종 api response 결과 파싱(LLM에 전달하기 위함)
+def normalize_response(api_response, schema_path, max_items: int = 5) -> str:
+    """
+    범용적인 API 응답 파서 함수
+    :param api_response: requests.Response 또는 dict
+    :param max_items: 리스트 응답 시 최대 몇 개 출력할지
+    :return: LLM이 이해할 수 있는 문자열
+    """
+    if hasattr(api_response, "json"):
+        data = api_response.json()
+    else:
+        data = api_response  # 이미 dict인 경우
+
+    def normalize(obj, depth=0):
+        schema_path
+
+    return normalize(data)
+
 
 
 # 최종 api response 결과 파싱(LLM에 전달하기 위함)

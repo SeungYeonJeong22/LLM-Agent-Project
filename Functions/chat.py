@@ -1,6 +1,6 @@
 from Settings.apis import *
 from Settings.router import APIRouter
-from Utils.utils import parse_api_response, extract_api_params_from_user_query
+from Utils.utils import *
 
 def chat(query, agent=None):
     if agent is None or agent.chain is None:
@@ -10,18 +10,18 @@ def chat(query, agent=None):
     api = router.route(query)
 
     if api:
-        user_params = extract_api_params_from_user_query(query, agent, api)
+        user_params, schema_path = extract_api_params_from_user_query(query, agent, api)
     
     api_response = api.search(user_params)
-    parsed_api_response = parse_api_response(api_response)
+    api_response = parse_api_response(api_response)
+    # api_response = normalize_response(api_response, schema_path)
 
     response = agent.chain.invoke({
-        "system": agent.get_system_message()[0],
+        "system_head": agent.system_messages_head,
         "input": query,
-        "response_api": parsed_api_response,
-        "ai": agent.get_ai_message(),
-        "system": agent.get_system_message()[-1]
+        "api_response": api_response,
+        # "api_response": parsed_api_response,
+        "system_tail": agent.system_messages_tail
     })
-
 
     return response.content

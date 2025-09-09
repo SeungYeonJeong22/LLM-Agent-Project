@@ -48,18 +48,16 @@ class Agent:
             )
 
         prompt = ChatPromptTemplate.from_messages([
-            ("system", "{system}"),
-            # MessagesPlaceholder("policy"),   # List[ChatMessage]
+            ("system", "{system_head}"),
             # MessagesPlaceholder("history"),  # List[Human/AI/...]
             ("human", "{input}"),
-            # MessagesPlaceholder("response_api"),
-            ("ai", "다음은 외부 API에서 가져온 검색 결과야:\n\n{response_api}\n\n이걸 참고해서 유저에게 요약된 결과를 알려줘."),
-            ("system", "{system}"),
+            ("ai", "다음은 외부 API에서 가져온 검색 결과야:\n\n{api_response}\n\n이걸 참고해서 유저에게 요약된 결과를 알려줘."),
+            ("system", "{system_tail}"),
         ])
 
         self.chain = prompt | llm #LLM 호출 & 체인 연결 (|로 연결)
 
-        system_messages1 = [
+        self.system_messages_head = [
             ChatMessage(role="system", content="너는 친절한 한국어 에이전트 모델이야. 답변은 반드시 한국어로 해야 해."),
             ChatMessage(role="system", content="불확실하면 추측하지 말고 필요한 정보를 물어봐."),
             ChatMessage(role="system", content="숫자/단계가 있으면 짧은 목록으로 정리해."),
@@ -67,18 +65,14 @@ class Agent:
             ChatMessage(role="system", content="개인정보/민감정보는 요청해도 제공하지 마.")
         ]
         
-        system_messages2 = [
-            ChatMessage(role="system", content="스스로 약 3번 이상 검토해보고 스스로에 대한 유저의 질문과 답하고자 하는 대답간의 유사성 및 재현성을 판단해줘."),
+        self.system_messages_tail = [
+            ChatMessage(role="system", content="스스로 3번 이상 검토해보고 스스로에 대한 유저의 질문과 답하고자 하는 대답간의 유사성 및 재현성을 판단해줘."),
         ]
         
-        self.system_messages = [
-            system_messages1,
-            system_messages2
-        ]
-        
-        self.ai_messages = [
-            ChatMessage(role='ai', content="너는 유저의 쿼리와 API를 호출한 대답의 결과에 대해서 유사성이 높은 것에 대해서 얘기해줘야 해.")
-        ]
+
+        # self.ai_messages = [
+        #     ChatMessage(role='ai', content="너는 유저의 쿼리와 API를 호출한 대답의 결과에 대해서 유사성이 높은 것에 대해서 얘기해줘야 해.")
+        # ]
         
         
     def get_params_mapping_api(self, api_name, schema_path):
@@ -103,9 +97,3 @@ class Agent:
         with open(schema_path, 'r') as f:
             schema = json.load(f)
         return schema
-
-    def get_system_message(self):
-        return self.system_messages
-
-    def get_ai_message(self):
-        return self.ai_messages    
